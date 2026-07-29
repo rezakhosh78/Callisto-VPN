@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build Signed APK
 
 on:
   workflow_dispatch:
@@ -23,7 +23,7 @@ jobs:
       RELEASE_TAG: ${{ github.event.release.tag_name || inputs.tag_name || github.ref_name }}
 
     steps:
-      - name: Checkout
+      - name: Checkout repository
         uses: actions/checkout@v4
 
       - name: Set up JDK 21
@@ -45,13 +45,16 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
-      - name: Sign APK
+      - name: Find and sign APK
         run: |
           set -euo pipefail
 
           mkdir -p dist
 
-          APK_PATH="$(find app/build/outputs/apk -type f -name '*.apk' | head -n 1)"
+          echo "Searching APK files..."
+          find . -type f -name "*.apk"
+
+          APK_PATH="$(find . -type f -name "*.apk" | head -n 1)"
           test -n "$APK_PATH"
 
           ZIPALIGN="$(find "$ANDROID_HOME/build-tools" -name zipalign | sort | tail -n 1)"
@@ -64,19 +67,19 @@ jobs:
             --ks-key-alias "${{ secrets.ANDROID_KEY_ALIAS }}" \
             --ks-pass pass:"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}" \
             --key-pass pass:"${{ secrets.ANDROID_KEY_PASSWORD }}" \
-            --out "dist/Callisto-${RELEASE_TAG}-release.apk" \
+            --out "dist/Callisto-${RELEASE_TAG}-signed.apk" \
             "dist/Callisto-${RELEASE_TAG}-aligned.apk"
 
-          "$APKSIGNER" verify --verbose "dist/Callisto-${RELEASE_TAG}-release.apk"
+          "$APKSIGNER" verify --verbose "dist/Callisto-${RELEASE_TAG}-signed.apk"
 
-      - name: Upload artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: Callisto-release-apk
-          path: dist/*-release.apk
+          name: Callisto-signed-apk
+          path: dist/*-signed.apk
 
       - name: Upload APK to GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ env.RELEASE_TAG }}
-          files: dist/*-release.apk
+          files: dist/*-signed.apk
