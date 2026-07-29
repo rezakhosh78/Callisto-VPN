@@ -1,0 +1,64 @@
+plugins {
+    id 'com.android.application'
+}
+
+layout.buildDirectory = file('build-v0710-g93')
+
+android {
+    namespace = 'com.rkh.callisto'
+    compileSdk = 35
+    buildToolsVersion = '36.0.0'
+
+    signingConfigs {
+        debug {
+            storeFile = file('../signing/callisto-debug.keystore')
+            storePassword = 'android'
+            keyAlias = 'androiddebugkey'
+            keyPassword = 'android'
+        }
+    }
+
+    defaultConfig {
+        applicationId = 'com.rkh.callisto'
+        minSdk = 24
+        targetSdk = 35
+        versionCode = 36
+        versionName = '0.7.11-alpha'
+        ndk {
+            abiFilters += ['armeabi-v7a', 'arm64-v8a']
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled = true
+            shrinkResources = true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+        }
+        debug {
+            applicationIdSuffix = '.debug'
+            versionNameSuffix = '-debug'
+            signingConfig = signingConfigs.debug
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    packaging {
+        jniLibs {
+            // Keep the universal APK compact. Android extracts only the phone's
+            // active ABI instead of storing both uncompressed ABIs in the APK.
+            useLegacyPackaging = true
+        }
+    }
+}
+
+dependencies {
+    implementation files('libs/IPtProxy-5.5.1-shaded-v4.aar')
+    implementation files('libs/tor-android-0.4.9.5.aar')
+    implementation 'info.guardianproject:jtorctl:0.4.5.7'
+    implementation 'androidx.localbroadcastmanager:localbroadcastmanager:1.1.0'
+}

@@ -1,0 +1,79 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    package="com.rkh.callisto">
+
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+    </queries>
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <application
+        android:name=".CallistoApplication"
+        android:allowBackup="false"
+        android:extractNativeLibs="true"
+        android:icon="@drawable/ic_callisto"
+        android:label="Callisto"
+        android:roundIcon="@drawable/ic_callisto"
+        android:supportsRtl="true"
+        android:theme="@style/AppTheme"
+        android:usesCleartextTraffic="false">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:screenOrientation="portrait">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <service
+            android:name=".service.CallistoVpnService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:process=":tunnel"
+            android:permission="android.permission.BIND_VPN_SERVICE">
+            <intent-filter>
+                <action android:name="android.net.VpnService" />
+            </intent-filter>
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Encrypted user-selected network tunnel" />
+        </service>
+
+        <service
+            android:name=".service.LocalProxyService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            android:process=":tunnel">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="User-selected local proxy endpoint" />
+        </service>
+
+        <!-- IPtProxy and Psiphon are separate gomobile runtimes. Keep the
+             pluggable-transport runtime in its own process to prevent Go symbol
+             interposition when Psiphon starts. -->
+        <service
+            android:name=".service.SnowflakeTransportService"
+            android:exported="false"
+            android:process=":transport" />
+
+        <!-- Keep Tor's local Binder in the same isolated process as NativeCore. -->
+        <service
+            android:name="org.torproject.jni.TorService"
+            android:exported="false"
+            android:process=":tunnel"
+            tools:replace="android:exported,android:process" />
+    </application>
+</manifest>

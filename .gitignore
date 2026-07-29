@@ -1,0 +1,9 @@
+.gradle/
+.idea/
+local.properties
+**/build/
+**/build-*/
+*.iml
+*.jks
+*.keystore
+!signing/callisto-debug.keystore
